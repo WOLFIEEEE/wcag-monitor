@@ -1,0 +1,164 @@
+╔═══════════════════════════════════════════════════════════════╗
+║         WCAG MONITOR - COOLIFY DEPLOYMENT PACKAGE            ║
+║                   Ready for Production                        ║
+╚═══════════════════════════════════════════════════════════════╝
+
+📁 REPOSITORY LOCATION
+/Users/khushwantparihar/pally-setup/wcag-monitor
+
+📋 WHAT'S INCLUDED
+
+✅ Core Application
+  - Backend API (Hapi.js + Pa11y)
+  - Frontend (Next.js 16)
+  - All advanced features implemented
+
+✅ Docker Configuration
+  - docker-compose.yml (Production-ready for Coolify)
+  - docker-compose.dev.yml (Local development)
+  - docker/backend.Dockerfile (With Chrome for Pa11y)
+  - docker/frontend.Dockerfile (Multi-stage build)
+
+✅ Configuration Files
+  - .env.example (Complete environment template)
+  - .gitignore (Clean repository)
+  - .dockerignore (Optimized builds)
+
+✅ Documentation
+  - README.md (Comprehensive guide)
+  - DEPLOYMENT.md (Step-by-step Coolify deployment)
+  - This file (Quick start)
+
+✅ Health Checks
+  - Backend: /health endpoint
+  - MongoDB: Built-in health check
+  - Frontend: Container health check
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🚀 QUICK START (5 STEPS)
+
+1️⃣  PUSH TO GIT
+cd /Users/khushwantparihar/pally-setup/wcag-monitor
+git init
+git add .
+git commit -m "Initial commit"
+git remote add origin <YOUR_REPO_URL>
+git push -u origin main
+
+2️⃣  CREATE IN COOLIFY
+- Open Coolify Dashboard
+- Click "New Resource" → "Docker Compose"
+- Select your repository
+- Choose branch: main
+
+3️⃣  SET ENVIRONMENT VARIABLES
+Generate secrets:
+  openssl rand -base64 32  # For JWT_SECRET
+  openssl rand -base64 32  # For JWT_REFRESH_SECRET
+
+Add in Coolify:
+  JWT_SECRET=<generated-1>
+  JWT_REFRESH_SECRET=<generated-2>
+  FRONTEND_URL=https://your-domain.com
+  NEXT_PUBLIC_API_URL=https://your-domain.com
+
+4️⃣  CONFIGURE DOMAIN
+- Set your domain in Coolify
+- Coolify handles SSL automatically
+- Update env vars with final domain
+
+5️⃣  DEPLOY
+- Click "Deploy" button
+- Wait 2-3 minutes for build
+- Visit your domain!
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🎯 ARCHITECTURE
+
+Internet → Coolify (SSL) → Frontend:3001
+                          ↓
+                    Backend:3000 → MongoDB:27017
+
+All internal communication via Docker network.
+Only frontend is exposed to internet via Coolify.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📦 SERVICES
+
+1. MongoDB (Internal)
+   - Port: 27017 (not exposed)
+   - Persistent volumes
+   - Health checked
+
+2. Backend (Internal)
+   - Port: 3000 (not exposed)
+   - Pa11y scanner with Chrome
+   - JWT authentication
+   - Health endpoint: /health
+
+3. Frontend (Public)
+   - Port: 3001 (Coolify proxies)
+   - Next.js standalone
+   - SSR optimized
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🔒 REQUIRED ENVIRONMENT VARIABLES
+
+JWT_SECRET              - For signing JWT tokens
+JWT_REFRESH_SECRET      - For refresh tokens  
+FRONTEND_URL            - Your public domain
+NEXT_PUBLIC_API_URL     - API URL for browser
+
+🔧 OPTIONAL ENVIRONMENT VARIABLES
+
+STRIPE_SECRET_KEY       - For billing features
+STRIPE_WEBHOOK_SECRET   - Stripe webhooks
+RESEND_API_KEY          - For email notifications
+FREE_URL_LIMIT          - Default: 2
+CRON                    - Default: 0 30 0 * * *
+NUM_WORKERS             - Default: 2
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✨ FEATURES
+
+• User Authentication (JWT)
+• Site Monitoring (WCAG 2.0/2.1)
+• Custom Actions (login, clicks, etc.)
+• Custom Headers (API tokens, etc.)
+• HTTP Basic Auth Support
+• Hide Elements (ads, widgets)
+• Ignore Rules (exclude specific issues)
+• Scheduled Scans (cron-based)
+• Detailed Reports & Trends
+• Issue Filtering & Search
+• CSV/JSON Export
+• Result Comparison
+• Email Notifications (optional)
+• Stripe Billing (optional)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📚 DOCUMENTATION
+
+- README.md        - Complete guide
+- DEPLOYMENT.md    - Coolify step-by-step
+- .env.example     - All configuration options
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🛟 SUPPORT
+
+Health Check:  curl https://your-domain.com/health
+API Info:      curl https://your-domain.com/api
+Logs:          Coolify Dashboard → Your App → Logs
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✅ ALL DONE! Ready for Coolify deployment.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

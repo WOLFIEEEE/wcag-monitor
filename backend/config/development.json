@@ -1,0 +1,22 @@
+{
+	"database": "mongodb://localhost:27017/wcag-monitor",
+	"host": "0.0.0.0",
+	"port": 3000,
+	"cron": "0 30 0 * * *",
+	"numWorkers": 2,
+	"chromeLaunchConfig": {
+		"args": [
+			"--no-sandbox",
+			"--disable-setuid-sandbox",
+			"--disable-dev-shm-usage"
+		]
+	},
+	"jwtSecret": "dev-jwt-secret-change-in-production-32chars",
+	"jwtRefreshSecret": "dev-refresh-secret-change-in-prod-32",
+	"jwtExpiresIn": "15m",
+	"jwtRefreshExpiresIn": "7d",
+	"frontendUrl": "http://localhost:3001",
+	"freeUrlLimit": 2,
+	"pagesPerUrl": 100,
+	"pricePerUrl": 900
+}

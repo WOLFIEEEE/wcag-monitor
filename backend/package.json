@@ -1,0 +1,40 @@
+{
+  "name": "wcag-monitor-backend",
+  "version": "1.0.0",
+  "description": "WCAG Monitor Backend API with Pa11y integration",
+  "main": "index.js",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "start": "node index.js",
+    "dev": "node --watch index.js",
+    "lint": "eslint ."
+  },
+  "dependencies": {
+    "@hapi/hapi": "~21.4.3",
+    "async": "~3.2.6",
+    "bcrypt": "^5.1.1",
+    "cron": "~2.4.4",
+    "joi": "~17.11.0",
+    "jose": "^5.2.0",
+    "kleur": "~4.1.5",
+    "lodash.groupby": "~4.6.0",
+    "mongodb": "^5.9.0",
+    "pa11y": "^9.0.1",
+    "resend": "^3.0.0",
+    "stripe": "^14.0.0",
+    "uuid": "^9.0.0"
+  },
+  "devDependencies": {
+    "eslint": "^9.39.1"
+  },
+  "keywords": [
+    "accessibility",
+    "wcag",
+    "pa11y",
+    "monitoring"
+  ],
+  "author": "",
+  "license": "GPL-3.0"
+}

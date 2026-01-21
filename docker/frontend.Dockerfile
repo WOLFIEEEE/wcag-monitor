@@ -30,13 +30,13 @@ COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
 COPY --from=builder /app/public ./public
 
-EXPOSE 3001
+EXPOSE 80
 
-ENV PORT=3001
+ENV PORT=80
 ENV HOSTNAME="0.0.0.0"
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
-  CMD wget --no-verbose --tries=1 --spider http://localhost:3001 || exit 1
+  CMD wget --no-verbose --tries=1 --spider http://localhost:80 || exit 1
 
 CMD ["node", "server.js"]

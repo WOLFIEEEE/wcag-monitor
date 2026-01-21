@@ -58,7 +58,7 @@ services:
       retries: 3
       start_period: 60s
 
-  # Frontend (Coolify handles reverse proxy)
+  # Frontend - Main entry point
   frontend:
     build:
       context: ./frontend
@@ -66,8 +66,8 @@ services:
       args:
         - BACKEND_URL=http://backend:3000
     restart: unless-stopped
-    expose:
-      - "3001"
+    ports:
+      - "3001:3001"
     environment:
       - NODE_ENV=production
     depends_on:

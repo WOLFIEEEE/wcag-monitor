@@ -23,8 +23,15 @@ if (fs.existsSync(jsonPath)) {
 		jwtRefreshExpiresIn: jsonConfig.jwtRefreshExpiresIn || '7d',
 		stripeSecretKey: env('STRIPE_SECRET_KEY', jsonConfig.stripeSecretKey || ''),
 		stripeWebhookSecret: env('STRIPE_WEBHOOK_SECRET', jsonConfig.stripeWebhookSecret || ''),
-		resendApiKey: env('RESEND_API_KEY', jsonConfig.resendApiKey || ''),
 		frontendUrl: env('FRONTEND_URL', jsonConfig.frontendUrl || 'http://localhost:3001'),
+		// SMTP Configuration
+		smtpHost: env('SMTP_HOST', jsonConfig.smtpHost || ''),
+		smtpPort: Number(env('SMTP_PORT', jsonConfig.smtpPort || '587')),
+		smtpUser: env('SMTP_USER', jsonConfig.smtpUser || ''),
+		smtpPass: env('SMTP_PASS', jsonConfig.smtpPass || ''),
+		smtpFrom: env('SMTP_FROM', jsonConfig.smtpFrom || ''),
+		smtpFromName: env('SMTP_FROM_NAME', jsonConfig.smtpFromName || 'WCAG Monitor'),
+		emailNotificationsEnabled: env('EMAIL_NOTIFICATIONS_ENABLED', jsonConfig.emailNotificationsEnabled || 'false') === 'true',
 		freeUrlLimit: jsonConfig.freeUrlLimit || 2,
 		pagesPerUrl: jsonConfig.pagesPerUrl || 100,
 		pricePerUrl: jsonConfig.pricePerUrl || 900 // cents
@@ -45,8 +52,15 @@ if (fs.existsSync(jsonPath)) {
 		jwtRefreshExpiresIn: '7d',
 		stripeSecretKey: env('STRIPE_SECRET_KEY', ''),
 		stripeWebhookSecret: env('STRIPE_WEBHOOK_SECRET', ''),
-		resendApiKey: env('RESEND_API_KEY', ''),
 		frontendUrl: env('FRONTEND_URL', 'http://localhost:3001'),
+		// SMTP Configuration
+		smtpHost: env('SMTP_HOST', ''),
+		smtpPort: Number(env('SMTP_PORT', '587')),
+		smtpUser: env('SMTP_USER', ''),
+		smtpPass: env('SMTP_PASS', ''),
+		smtpFrom: env('SMTP_FROM', ''),
+		smtpFromName: env('SMTP_FROM_NAME', 'WCAG Monitor'),
+		emailNotificationsEnabled: env('EMAIL_NOTIFICATIONS_ENABLED', 'false') === 'true',
 		freeUrlLimit: 2,
 		pagesPerUrl: 100,
 		pricePerUrl: 900

@@ -1,4 +1,5 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+// API calls go to the same origin - Next.js rewrites proxy them to backend
+const API_URL = '';
 
 interface ApiOptions {
   method?: string;

@@ -4,7 +4,6 @@ services:
   # MongoDB Database
   mongodb:
     image: mongo:7.0
-    container_name: wcag-mongodb
     restart: unless-stopped
     volumes:
       - mongodb_data:/data/db
@@ -25,7 +24,6 @@ services:
     build:
       context: ./backend
       dockerfile: ../docker/backend.Dockerfile
-    container_name: wcag-backend
     restart: unless-stopped
     environment:
       - NODE_ENV=production
@@ -60,17 +58,16 @@ services:
       retries: 3
       start_period: 60s
 
-  # Frontend (Exposed via Coolify)
+  # Frontend (Coolify handles reverse proxy)
   frontend:
     build:
       context: ./frontend
       dockerfile: ../docker/frontend.Dockerfile
       args:
         - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
-    container_name: wcag-frontend
     restart: unless-stopped
-    ports:
-      - "3001:3001"
+    expose:
+      - "3001"
     environment:
       - NODE_ENV=production
       - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}

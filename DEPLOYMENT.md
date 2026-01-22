@@ -1,236 +1,258 @@
-# Coolify Deployment Guide
+# Coolify Deployment Guide (2025/2026 Best Practices)
 
-## Quick Deployment Checklist
+## ⚡ Quick Fix Checklist
 
-### 1. Prerequisites
-- [ ] Coolify instance running
+If your deployment shows "healthy" but the URL doesn't work:
+
+1. **Check Service Selection**: In Coolify, ensure the **frontend** service is selected as the main service
+2. **Verify Domain Configuration**: Domain must be mapped to the frontend service specifically
+3. **Check Port Configuration**: Coolify should route to port `3000` (container's internal port)
+4. **Force Redeploy**: After any changes, use "Restart" not just "Deploy"
+
+---
+
+## Prerequisites
+
+- [ ] Coolify v4+ instance running
 - [ ] Git repository (GitHub/GitLab) created
-- [ ] Domain name (optional)
+- [ ] Domain name configured (or use Coolify auto-generated subdomain)
 
-### 2. Repository Setup
+---
+
+## Step-by-Step Deployment
+
+### Step 1: Push to Git
+
 ```bash
 cd wcag-monitor
-git init
 git add .
-git commit -m "Initial commit: WCAG Monitor for Coolify"
-git remote add origin <your-repo-url>
-git push -u origin main
+git commit -m "Fix: Coolify port configuration and labels"
+git push origin main
 ```
 
-### 3. Coolify Configuration
+### Step 2: Create Docker Compose Resource in Coolify
 
-**Step 1:** Create New Resource
-- Go to Coolify Dashboard
-- Click "New Resource" → "Docker Compose"
-- Select your Git repository
-- Choose branch: `main`
-- Coolify auto-detects `docker-compose.yml` ✓
+1. Go to Coolify Dashboard
+2. Click **"+ Create"** → **"Docker Compose"**
+3. Select your Git source (GitHub/GitLab)
+4. Choose repository and branch: `main`
+5. Coolify auto-detects `docker-compose.yaml` ✓
 
-**Step 2:** Environment Variables (REQUIRED)
+### Step 3: Configure Service (CRITICAL)
 
-Generate secure secrets:
-```bash
-# Generate JWT secrets
-openssl rand -base64 32
-openssl rand -base64 32
-```
+After creating the resource, you must configure the frontend service:
 
-In Coolify, add these variables:
+1. Go to **"Services"** tab
+2. Click on **"frontend"** service
+3. Under **"Network"** settings:
+   - **Port**: Set to `3000`
+   - **Domain**: Enter your domain (e.g., `wcag.yourdomain.com`)
+4. Enable **"Generate SSL"** if not already enabled
+
+### Step 4: Set Environment Variables
+
+Add these in Coolify under **"Environment Variables"**:
 
 ```env
-JWT_SECRET=<generated-secret-1>
-JWT_REFRESH_SECRET=<generated-secret-2>
+# REQUIRED
+JWT_SECRET=<generate-with: openssl rand -base64 32>
+JWT_REFRESH_SECRET=<generate-with: openssl rand -base64 32>
 FRONTEND_URL=https://your-domain.com
 NEXT_PUBLIC_API_URL=https://your-domain.com
-```
 
-Optional variables:
-```env
+# OPTIONAL
 STRIPE_SECRET_KEY=sk_test_...
 STRIPE_WEBHOOK_SECRET=whsec_...
-RESEND_API_KEY=re_...
 FREE_URL_LIMIT=2
 CRON=0 30 0 * * *
 NUM_WORKERS=2
 ```
 
-**Step 3:** Domain Configuration
-- Configure custom domain or use Coolify subdomain
-- Coolify handles SSL/HTTPS automatically
-- Update environment variables with final domain
+### Step 5: Deploy
 
-**Step 4:** Deploy
-- Click "Deploy"
-- Monitor build logs
-- Wait for all services to be healthy (~2-3 minutes)
+1. Click **"Deploy"** button
+2. Monitor build logs for errors
+3. Wait for all services to show healthy (~3-5 minutes)
+4. Visit your domain!
 
-### 4. Post-Deployment
-
-**Verify Services:**
-```bash
-# Health check
-curl https://your-domain.com/health
-
-# API info
-curl https://your-domain.com/api
-```
-
-**Create First User:**
-1. Visit https://your-domain.com
-2. Click "Sign Up"
-3. Create account
-4. Add first site to monitor
+---
 
 ## Architecture
 
 ```
-Internet
-    │
-    ▼
-┌─────────────────────┐
-│ Coolify Proxy       │
-│ (SSL/HTTPS)         │
-└──────────┬──────────┘
-           │
-    ┌──────┴───────┐
-    │              │
-┌───▼───┐      ┌──▼────┐
-│Frontend│      │Backend│
-│:3001   │◄────►│:3000  │
-└────────┘      └───┬───┘
-                    │
-                ┌───▼────┐
-                │MongoDB │
-                │:27017  │
-                └────────┘
+                    Internet
+                        │
+                        ▼
+┌─────────────────────────────────────────┐
+│             Coolify Traefik             │
+│         (SSL/HTTPS Termination)         │
+└──────────────────┬──────────────────────┘
+                   │
+                   ▼ Port 3000
+         ┌─────────────────────┐
+         │      Frontend       │
+         │    (Next.js SSR)    │
+         └──────────┬──────────┘
+                    │ http://backend:3000
+                    ▼
+         ┌─────────────────────┐
+         │      Backend        │
+         │  (Hapi.js + Pa11y)  │
+         └──────────┬──────────┘
+                    │ mongodb://mongodb:27017
+                    ▼
+         ┌─────────────────────┐
+         │      MongoDB        │
+         │   (Persistent)      │
+         └─────────────────────┘
 ```
 
-## Services
+---
 
-1. **MongoDB** (mongodb:27017)
-   - Database storage
-   - Persistent volumes
-   - Health checked
+## Service Details
 
-2. **Backend** (backend:3000)
-   - Hapi.js API
-   - Pa11y scanner
-   - JWT authentication
-   - Health endpoint: `/health`
+| Service | Internal Port | Exposed | Purpose |
+|---------|--------------|---------|---------|
+| MongoDB | 27017 | No | Database |
+| Backend | 3000 | No | API, Pa11y Scanner |
+| Frontend | 3000 | Yes (via Traefik) | Next.js Web App |
 
-3. **Frontend** (frontend:3001)
-   - Next.js app
-   - Mantine UI
-   - SSR + standalone mode
-   - Exposed to internet via Coolify
-
-## Internal Networking
-
-All services communicate via Docker internal network:
-- Frontend → Backend: `http://backend:3000`
-- Backend → MongoDB: `mongodb://mongodb:27017/wcag-monitor`
-- Public URL (browser) → Backend: `https://your-domain.com`
-
-## Volumes
-
-Persistent data in Docker volumes:
-- `mongodb_data` - Database files
-- `mongodb_config` - MongoDB configuration
-
-## Health Checks
-
-All services have health checks:
-- MongoDB: `mongosh --eval "db.adminCommand('ping')"`
-- Backend: `wget http://localhost:3000/health`
-- Frontend: `wget http://localhost:3001`
+---
 
 ## Troubleshooting
 
-### Build Fails
-- Check Coolify build logs
-- Verify all environment variables are set
-- Ensure Docker has resources (4GB+ RAM recommended)
+### ❌ "Healthy" but URL doesn't work
 
-### Services Not Starting
+**Cause**: Coolify is routing to the wrong service or port.
+
+**Fix**:
+1. In Coolify, go to your application → **"Services"** tab
+2. Ensure **"frontend"** is the service with your domain configured
+3. Set port to **3000** (not 4000 or 3001)
+4. Click **"Restart"** (not just Deploy)
+
+### ❌ Build fails
+
+1. Check Coolify build logs for specific errors
+2. Verify all environment variables are set
+3. Ensure Docker has sufficient resources (4GB+ RAM)
+
+### ❌ 502 Bad Gateway
+
+**Cause**: Backend is not ready when frontend starts.
+
+**Fix**: The docker-compose.yaml already handles this with `depends_on` + health checks. Wait 2-3 minutes for full startup.
+
+### ❌ Cannot reach /health endpoint
+
 ```bash
-# Check service status
-docker ps
+# SSH into Coolify server and check:
+docker ps | grep wcag
 
-# Check logs
-docker logs wcag-backend
-docker logs wcag-frontend
-docker logs wcag-mongodb
+# Check frontend logs:
+docker logs <frontend-container-id>
+
+# Check backend logs:
+docker logs <backend-container-id>
 ```
 
-### Can't Access Frontend
-- Verify domain is configured in Coolify
-- Check SSL certificate status
-- Ensure FRONTEND_URL matches domain
+### ❌ MongoDB connection errors
 
-### Database Connection Errors
-- Verify MongoDB is healthy
-- Check DATABASE environment variable
-- Review backend logs
+1. Check MongoDB container is running
+2. Verify `DATABASE` env var is `mongodb://mongodb:27017/wcag-monitor`
+3. Check backend logs for connection errors
 
-## Scaling
+---
 
-To handle more load:
+## Health Check Endpoints
 
-1. **Increase workers:**
-   ```env
-   NUM_WORKERS=4
-   ```
+```bash
+# Frontend (via domain)
+curl https://your-domain.com
 
-2. **Add resources in Coolify:**
-   - CPU: 2+ cores recommended
-   - RAM: 4GB+ recommended
-   - Storage: 20GB+ recommended
+# Backend health (via frontend proxy)
+curl https://your-domain.com/health
 
-3. **Optimize cron:**
-   ```env
-   # Run scans every 6 hours instead of daily
-   CRON=0 0 */6 * * *
-   ```
+# Internal (SSH into server)
+docker exec <frontend-container> wget -qO- http://localhost:3000
+docker exec <backend-container> wget -qO- http://localhost:3000/health
+```
 
-## Backup & Recovery
+---
 
-### Backup MongoDB
+## Coolify v4+ Specific Settings
+
+### Service Labels (Already configured in docker-compose.yaml)
+
+```yaml
+labels:
+  - coolify.managed=true
+  - coolify.portLabel=3000
+```
+
+### Network Mode
+
+Coolify v4+ automatically creates a bridge network. Our `wcag-network` is for internal service communication.
+
+### Health Checks
+
+All services have health checks that Coolify monitors. If any service becomes unhealthy, Coolify will show warnings.
+
+---
+
+## Scaling & Performance
+
+### Increase Workers
+```env
+NUM_WORKERS=4
+```
+
+### Add Resources (in Coolify)
+- CPU: 2+ cores recommended
+- RAM: 4GB+ recommended
+- Storage: 20GB+ for MongoDB data
+
+### Optimize Scan Schedule
+```env
+# Scan every 6 hours instead of daily
+CRON=0 0 */6 * * *
+```
+
+---
+
+## Backup MongoDB
+
 ```bash
 # Create backup
-docker exec wcag-mongodb mongodump --out /backup
+docker exec <mongodb-container> mongodump --out /backup
 
 # Copy from container
-docker cp wcag-mongodb:/backup ./mongodb-backup
+docker cp <mongodb-container>:/backup ./mongodb-backup-$(date +%Y%m%d)
 ```
 
-### Restore MongoDB
-```bash
-# Copy to container
-docker cp ./mongodb-backup wcag-mongodb:/backup
-
-# Restore
-docker exec wcag-mongodb mongorestore /backup
-```
-
-## Security Checklist
-
-- [ ] Strong JWT secrets (32+ characters)
-- [ ] HTTPS enabled (Coolify handles)
-- [ ] Environment variables in Coolify (not in code)
-- [ ] MongoDB not exposed to internet
-- [ ] Regular backups configured
-- [ ] Strong user passwords enforced
+---
 
 ## Updates
 
-To update the application:
-
 1. Push changes to Git repository
-2. Coolify auto-deploys (if enabled)
-3. Or manually trigger deploy in Coolify UI
+2. In Coolify: Click **"Redeploy"**
+3. Or enable **"Auto Deploy"** for automatic deployments on push
+
+---
+
+## Security Checklist
+
+- [ ] Strong JWT secrets (32+ characters, generated)
+- [ ] HTTPS enabled (Coolify handles via Traefik)
+- [ ] Environment variables in Coolify UI (not committed to code)
+- [ ] MongoDB not exposed to internet
+- [ ] Regular automated backups configured
+
+---
 
 ## Support
 
-- Coolify Docs: https://coolify.io/docs
-- Pa11y Docs: https://pa11y.org
-- MongoDB Docs: https://www.mongodb.com/docs
+- **Coolify Docs**: https://coolify.io/docs
+- **Coolify Discord**: https://coollabs.io/discord
+- **Pa11y Docs**: https://pa11y.org
+- **MongoDB Docs**: https://www.mongodb.com/docs

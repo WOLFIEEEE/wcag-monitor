@@ -1,4 +1,5 @@
-version: '3.8'
+# Coolify Docker Compose - WCAG Monitor
+# Updated for Coolify v4+ (2025/2026 best practices)
 
 services:
   # MongoDB Database
@@ -66,21 +67,28 @@ services:
       args:
         - BACKEND_URL=http://backend:3000
     restart: unless-stopped
-    expose:
-      - "4000"
+    # IMPORTANT: Use 'ports' not 'expose' for Coolify to route traffic
+    ports:
+      - "3000"
     environment:
       - NODE_ENV=production
+      - PORT=3000
+      - HOSTNAME=0.0.0.0
     depends_on:
       backend:
         condition: service_healthy
     networks:
       - wcag-network
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:4000"]
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 60s
+    # Coolify v4+ Labels - Tell Traefik this is the main service
+    labels:
+      - coolify.managed=true
+      - coolify.portLabel=3000
 
 volumes:
   mongodb_data:

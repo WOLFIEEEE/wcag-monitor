@@ -1,7 +1,20 @@
 ╔═══════════════════════════════════════════════════════════════╗
 ║         WCAG MONITOR - COOLIFY DEPLOYMENT PACKAGE            ║
-║                   Ready for Production                        ║
+║           Updated for Coolify v4+ (2025/2026)                 ║
 ╚═══════════════════════════════════════════════════════════════╝
+
+🚨 COMMON ISSUE: "Healthy but URL not working"
+
+   This happens when Coolify routes to wrong service/port!
+   
+   FIX:
+   1. In Coolify → Your App → Services tab
+   2. Click "frontend" service
+   3. Set port to: 3000
+   4. Ensure domain is configured on frontend (not backend)
+   5. Click "Restart" (not Deploy)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 📁 REPOSITORY LOCATION
 /Users/khushwantparihar/pally-setup/wcag-monitor
@@ -14,10 +27,10 @@
   - All advanced features implemented
 
 ✅ Docker Configuration
-  - docker-compose.yml (Production-ready for Coolify)
-  - docker-compose.dev.yml (Local development)
+  - docker-compose.yaml (Coolify-optimized with labels)
+  - docker-compose.yml (Local development)
   - docker/backend.Dockerfile (With Chrome for Pa11y)
-  - docker/frontend.Dockerfile (Multi-stage build)
+  - docker/frontend.Dockerfile (Multi-stage, port 3000)
 
 ✅ Configuration Files
   - .env.example (Complete environment template)
@@ -26,13 +39,8 @@
 
 ✅ Documentation
   - README.md (Comprehensive guide)
-  - DEPLOYMENT.md (Step-by-step Coolify deployment)
+  - DEPLOYMENT.md (Coolify v4+ step-by-step)
   - This file (Quick start)
-
-✅ Health Checks
-  - Backend: /health endpoint
-  - MongoDB: Built-in health check
-  - Frontend: Container health check
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
@@ -40,19 +48,26 @@
 
 1️⃣  PUSH TO GIT
 cd /Users/khushwantparihar/pally-setup/wcag-monitor
-git init
 git add .
-git commit -m "Initial commit"
-git remote add origin <YOUR_REPO_URL>
-git push -u origin main
+git commit -m "Fix: Coolify configuration"
+git push origin main
 
 2️⃣  CREATE IN COOLIFY
 - Open Coolify Dashboard
-- Click "New Resource" → "Docker Compose"
+- Click "+ Create" → "Docker Compose"
 - Select your repository
 - Choose branch: main
 
-3️⃣  SET ENVIRONMENT VARIABLES
+3️⃣  CONFIGURE FRONTEND SERVICE
+⚠️  THIS IS CRITICAL - Most issues come from skipping this!
+
+   a) Go to "Services" tab after creation
+   b) Click on "frontend" service
+   c) Set Port: 3000
+   d) Add your domain
+   e) Enable SSL
+
+4️⃣  SET ENVIRONMENT VARIABLES
 Generate secrets:
   openssl rand -base64 32  # For JWT_SECRET
   openssl rand -base64 32  # For JWT_REFRESH_SECRET
@@ -63,46 +78,42 @@ Add in Coolify:
   FRONTEND_URL=https://your-domain.com
   NEXT_PUBLIC_API_URL=https://your-domain.com
 
-4️⃣  CONFIGURE DOMAIN
-- Set your domain in Coolify
-- Coolify handles SSL automatically
-- Update env vars with final domain
-
 5️⃣  DEPLOY
 - Click "Deploy" button
-- Wait 2-3 minutes for build
+- Wait 3-5 minutes for all services
 - Visit your domain!
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 🎯 ARCHITECTURE
 
-Internet → Coolify (SSL) → Frontend:3001
-                          ↓
-                    Backend:3000 → MongoDB:27017
+Internet → Coolify Traefik (SSL) → Frontend:3000
+                                       ↓
+                                 Backend:3000 → MongoDB:27017
 
 All internal communication via Docker network.
-Only frontend is exposed to internet via Coolify.
+Frontend exposed to internet via Traefik reverse proxy.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 📦 SERVICES
 
-1. MongoDB (Internal)
-   - Port: 27017 (not exposed)
+1. MongoDB (Internal Only)
+   - Port: 27017
    - Persistent volumes
    - Health checked
 
-2. Backend (Internal)
-   - Port: 3000 (not exposed)
+2. Backend (Internal Only)
+   - Port: 3000
    - Pa11y scanner with Chrome
    - JWT authentication
    - Health endpoint: /health
 
-3. Frontend (Public)
-   - Port: 3001 (Coolify proxies)
+3. Frontend (Public via Traefik)
+   - Port: 3000 (Coolify routes here)
    - Next.js standalone
    - SSR optimized
+   - Proxies /health, /auth/*, /tasks/*, /billing/* to backend
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
@@ -117,36 +128,33 @@ NEXT_PUBLIC_API_URL     - API URL for browser
 
 STRIPE_SECRET_KEY       - For billing features
 STRIPE_WEBHOOK_SECRET   - Stripe webhooks
-RESEND_API_KEY          - For email notifications
 FREE_URL_LIMIT          - Default: 2
 CRON                    - Default: 0 30 0 * * *
 NUM_WORKERS             - Default: 2
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-✨ FEATURES
+🛠️ TROUBLESHOOTING
 
-• User Authentication (JWT)
-• Site Monitoring (WCAG 2.0/2.1)
-• Custom Actions (login, clicks, etc.)
-• Custom Headers (API tokens, etc.)
-• HTTP Basic Auth Support
-• Hide Elements (ads, widgets)
-• Ignore Rules (exclude specific issues)
-• Scheduled Scans (cron-based)
-• Detailed Reports & Trends
-• Issue Filtering & Search
-• CSV/JSON Export
-• Result Comparison
-• Email Notifications (optional)
-• Stripe Billing (optional)
+"Healthy" but can't access URL:
+  → Check Services tab → frontend → port = 3000
+  → Check domain is on frontend service
+  → Click "Restart" not "Deploy"
+
+502 Bad Gateway:
+  → Wait 3-5 minutes for all services to start
+  → Check backend logs in Coolify
+
+Build Fails:
+  → Check environment variables are set
+  → Ensure 4GB+ RAM on server
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 📚 DOCUMENTATION
 
 - README.md        - Complete guide
-- DEPLOYMENT.md    - Coolify step-by-step
+- DEPLOYMENT.md    - Coolify v4+ step-by-step
 - .env.example     - All configuration options
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -154,8 +162,8 @@ NUM_WORKERS             - Default: 2
 🛟 SUPPORT
 
 Health Check:  curl https://your-domain.com/health
-API Info:      curl https://your-domain.com/api
-Logs:          Coolify Dashboard → Your App → Logs
+Coolify Docs:  https://coolify.io/docs
+Coolify Help:  https://coollabs.io/discord
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 

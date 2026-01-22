@@ -1,6 +1,6 @@
-# Coolify Docker Compose - WCAG Monitor
+# Coolify Docker Compose - WCAG Monitor (Backend Only)
+# Frontend hosted on Vercel separately
 # Updated for Coolify v4+ (2025/2026 best practices)
-# IMPORTANT: After deployment, configure domain on "frontend" service in Coolify UI
 
 services:
   # MongoDB Database
@@ -19,7 +19,7 @@ services:
       retries: 5
       start_period: 40s
 
-  # Backend API (Internal only - not exposed to internet)
+  # Backend API (Exposed publicly for Vercel frontend)
   backend:
     build:
       context: ./backend
@@ -35,6 +35,7 @@ services:
       - JWT_SECRET=${JWT_SECRET}
       - JWT_REFRESH_SECRET=${JWT_REFRESH_SECRET}
       - FRONTEND_URL=${FRONTEND_URL}
+      - ALLOWED_ORIGINS=${ALLOWED_ORIGINS:-}
       - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY:-}
       - STRIPE_WEBHOOK_SECRET=${STRIPE_WEBHOOK_SECRET:-}
       - FREE_URL_LIMIT=${FREE_URL_LIMIT:-2}
@@ -55,36 +56,14 @@ services:
       timeout: 10s
       retries: 3
       start_period: 60s
-    # Backend should NOT have traefik labels - internal only
-
-  # Frontend - Main entry point (Coolify routes traffic here)
-  frontend:
-    build:
-      context: ./frontend
-      dockerfile: ../docker/frontend.Dockerfile
-      args:
-        - BACKEND_URL=http://backend:3000
-    restart: unless-stopped
-    environment:
-      - NODE_ENV=production
-      - PORT=3000
-      - HOSTNAME=0.0.0.0
-    depends_on:
-      backend:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 60s
-    # Traefik labels for Coolify v4+ routing
+    # Traefik labels for public access (Coolify routes traffic here)
     labels:
       - "traefik.enable=true"
-      - "traefik.http.services.frontend.loadbalancer.server.port=3000"
+      - "traefik.http.services.backend.loadbalancer.server.port=3000"
 
 volumes:
   mongodb_data:
     driver: local
   mongodb_config:
     driver: local
+

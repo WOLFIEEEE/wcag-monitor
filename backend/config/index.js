@@ -34,7 +34,8 @@ if (fs.existsSync(jsonPath)) {
 		emailNotificationsEnabled: env('EMAIL_NOTIFICATIONS_ENABLED', jsonConfig.emailNotificationsEnabled || 'false') === 'true',
 		freeUrlLimit: jsonConfig.freeUrlLimit || 2,
 		pagesPerUrl: jsonConfig.pagesPerUrl || 100,
-		pricePerUrl: jsonConfig.pricePerUrl || 900 // cents
+		pricePerUrl: jsonConfig.pricePerUrl || 900, // cents
+		allowedOrigins: env('ALLOWED_ORIGINS', jsonConfig.allowedOrigins || '')
 	};
 } else {
 	config = {
@@ -63,7 +64,8 @@ if (fs.existsSync(jsonPath)) {
 		emailNotificationsEnabled: env('EMAIL_NOTIFICATIONS_ENABLED', 'false') === 'true',
 		freeUrlLimit: 2,
 		pagesPerUrl: 100,
-		pricePerUrl: 900
+		pricePerUrl: 900,
+		allowedOrigins: env('ALLOWED_ORIGINS', '')
 	};
 }
 

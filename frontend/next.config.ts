@@ -1,33 +1,13 @@
 import type { NextConfig } from "next";
 
-// Backend URL - in Docker it's the service name, locally it's localhost
-const BACKEND_URL = process.env.BACKEND_URL || 'http://backend:3000';
-
 const nextConfig: NextConfig = {
   output: 'standalone',
   experimental: {
     optimizePackageImports: ['@mantine/core', '@mantine/hooks', '@mantine/charts', '@tabler/icons-react'],
   },
-  async rewrites() {
-    return [
-      {
-        source: '/auth/:path*',
-        destination: `${BACKEND_URL}/auth/:path*`,
-      },
-      {
-        source: '/tasks/:path*',
-        destination: `${BACKEND_URL}/tasks/:path*`,
-      },
-      {
-        source: '/billing/:path*',
-        destination: `${BACKEND_URL}/billing/:path*`,
-      },
-      {
-        source: '/health',
-        destination: `${BACKEND_URL}/health`,
-      },
-    ];
-  },
+  // Note: Rewrites removed for Vercel deployment
+  // Frontend now calls backend API directly via NEXT_PUBLIC_API_URL
 };
 
 export default nextConfig;
+

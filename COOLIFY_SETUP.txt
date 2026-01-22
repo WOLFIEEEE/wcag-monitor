@@ -1,46 +1,28 @@
 ╔═══════════════════════════════════════════════════════════════╗
-║         WCAG MONITOR - COOLIFY DEPLOYMENT PACKAGE            ║
+║    WCAG MONITOR - COOLIFY DEPLOYMENT (BACKEND ONLY)          ║
 ║           Updated for Coolify v4+ (2025/2026)                 ║
 ╚═══════════════════════════════════════════════════════════════╝
 
-🚨 COMMON ISSUE: "Healthy but URL not working"
+📌 ARCHITECTURE OVERVIEW
 
-   This happens when Coolify routes to wrong service/port!
+   Frontend: Hosted on Vercel (see VERCEL_SETUP.md)
+   Backend:  Hosted on Coolify (this guide)
    
-   FIX:
-   1. In Coolify → Your App → Services tab
-   2. Click "frontend" service
-   3. Set port to: 3000
-   4. Ensure domain is configured on frontend (not backend)
-   5. Click "Restart" (not Deploy)
+   ┌─────────────────────────────────────────┐
+   │  Vercel: https://yourdomain.com         │
+   │  (Next.js Frontend)                     │
+   └────────────────┬────────────────────────┘
+                    │ HTTPS API calls
+                    ▼
+   ┌─────────────────────────────────────────┐
+   │  Coolify: https://api.yourdomain.com    │
+   │  Backend API + MongoDB                  │
+   └─────────────────────────────────────────┘
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 📁 REPOSITORY LOCATION
 /Users/khushwantparihar/pally-setup/wcag-monitor
-
-📋 WHAT'S INCLUDED
-
-✅ Core Application
-  - Backend API (Hapi.js + Pa11y)
-  - Frontend (Next.js 16)
-  - All advanced features implemented
-
-✅ Docker Configuration
-  - docker-compose.yaml (Coolify-optimized with labels)
-  - docker-compose.yml (Local development)
-  - docker/backend.Dockerfile (With Chrome for Pa11y)
-  - docker/frontend.Dockerfile (Multi-stage, port 3000)
-
-✅ Configuration Files
-  - .env.example (Complete environment template)
-  - .gitignore (Clean repository)
-  - .dockerignore (Optimized builds)
-
-✅ Documentation
-  - README.md (Comprehensive guide)
-  - DEPLOYMENT.md (Coolify v4+ step-by-step)
-  - This file (Quick start)
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
@@ -49,7 +31,7 @@
 1️⃣  PUSH TO GIT
 cd /Users/khushwantparihar/pally-setup/wcag-monitor
 git add .
-git commit -m "Fix: Coolify configuration"
+git commit -m "Split architecture: Vercel frontend + Coolify backend"
 git push origin main
 
 2️⃣  CREATE IN COOLIFY
@@ -58,13 +40,11 @@ git push origin main
 - Select your repository
 - Choose branch: main
 
-3️⃣  CONFIGURE FRONTEND SERVICE
-⚠️  THIS IS CRITICAL - Most issues come from skipping this!
-
+3️⃣  CONFIGURE BACKEND SERVICE
    a) Go to "Services" tab after creation
-   b) Click on "frontend" service
+   b) Click on "backend" service
    c) Set Port: 3000
-   d) Add your domain
+   d) Add your API domain (e.g., api.yourdomain.com)
    e) Enable SSL
 
 4️⃣  SET ENVIRONMENT VARIABLES
@@ -75,45 +55,29 @@ Generate secrets:
 Add in Coolify:
   JWT_SECRET=<generated-1>
   JWT_REFRESH_SECRET=<generated-2>
-  FRONTEND_URL=https://your-domain.com
-  NEXT_PUBLIC_API_URL=https://your-domain.com
+  FRONTEND_URL=https://yourdomain.com
+  ALLOWED_ORIGINS=https://yourdomain.com,https://www.yourdomain.com
 
 5️⃣  DEPLOY
 - Click "Deploy" button
-- Wait 3-5 minutes for all services
-- Visit your domain!
+- Wait 2-3 minutes for services
+- Test: curl https://api.yourdomain.com/health
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-🎯 ARCHITECTURE
-
-Internet → Coolify Traefik (SSL) → Frontend:3000
-                                       ↓
-                                 Backend:3000 → MongoDB:27017
-
-All internal communication via Docker network.
-Frontend exposed to internet via Traefik reverse proxy.
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-📦 SERVICES
+📦 SERVICES (Backend Only)
 
 1. MongoDB (Internal Only)
    - Port: 27017
    - Persistent volumes
    - Health checked
 
-2. Backend (Internal Only)
+2. Backend API (Public via Traefik)
    - Port: 3000
    - Pa11y scanner with Chrome
    - JWT authentication
+   - CORS configured for Vercel frontend
    - Health endpoint: /health
-
-3. Frontend (Public via Traefik)
-   - Port: 3000 (Coolify routes here)
-   - Next.js standalone
-   - SSR optimized
-   - Proxies /health, /auth/*, /tasks/*, /billing/* to backend
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
@@ -121,8 +85,8 @@ Frontend exposed to internet via Traefik reverse proxy.
 
 JWT_SECRET              - For signing JWT tokens
 JWT_REFRESH_SECRET      - For refresh tokens  
-FRONTEND_URL            - Your public domain
-NEXT_PUBLIC_API_URL     - API URL for browser
+FRONTEND_URL            - Your Vercel frontend domain
+ALLOWED_ORIGINS         - CORS allowed origins (comma-separated)
 
 🔧 OPTIONAL ENVIRONMENT VARIABLES
 
@@ -136,13 +100,12 @@ NUM_WORKERS             - Default: 2
 
 🛠️ TROUBLESHOOTING
 
-"Healthy" but can't access URL:
-  → Check Services tab → frontend → port = 3000
-  → Check domain is on frontend service
-  → Click "Restart" not "Deploy"
+CORS Errors from Vercel:
+  → Check ALLOWED_ORIGINS includes your Vercel domain(s)
+  → Ensure no trailing slashes in ALLOWED_ORIGINS
 
 502 Bad Gateway:
-  → Wait 3-5 minutes for all services to start
+  → Wait 2-3 minutes for all services to start
   → Check backend logs in Coolify
 
 Build Fails:
@@ -153,20 +116,22 @@ Build Fails:
 
 📚 DOCUMENTATION
 
-- README.md        - Complete guide
-- DEPLOYMENT.md    - Coolify v4+ step-by-step
-- .env.example     - All configuration options
+- README.md         - Complete guide
+- VERCEL_SETUP.md   - Frontend deployment on Vercel
+- .env.example      - All configuration options
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 🛟 SUPPORT
 
-Health Check:  curl https://your-domain.com/health
-Coolify Docs:  https://coolify.io/docs
-Coolify Help:  https://coollabs.io/discord
+Backend Health:  curl https://api.yourdomain.com/health
+Coolify Docs:    https://coolify.io/docs
+Coolify Help:    https://coollabs.io/discord
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-✅ ALL DONE! Ready for Coolify deployment.
+✅ ALL DONE! Backend ready for Coolify deployment.
+   Don't forget to deploy frontend on Vercel!
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+

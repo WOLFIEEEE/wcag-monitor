@@ -6,13 +6,18 @@ const { dim } = require('kleur');
 const { authPlugin } = require('./middleware/auth');
 
 async function initApp(config) {
+	// Parse allowed origins from environment variable
+	const allowedOrigins = config.allowedOrigins
+		? config.allowedOrigins.split(',').map(o => o.trim())
+		: ['*'];
+
 	const app = {
 		server: new Hapi.Server({
 			host: config.host,
 			port: config.port,
 			routes: {
 				cors: {
-					origin: ['*'],
+					origin: allowedOrigins,
 					headers: ['Accept', 'Authorization', 'Content-Type'],
 					credentials: true
 				}
@@ -58,7 +63,7 @@ async function initApp(config) {
 		require('./route/tasks')(app);
 		require('./route/task')(app);
 		require('./route/reports')(app);
-		
+
 		// Try to register billing routes if Stripe is configured
 		if (config.stripeSecretKey) {
 			try {

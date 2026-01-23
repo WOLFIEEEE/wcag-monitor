@@ -15,6 +15,9 @@ async function initApp(config) {
 		server: new Hapi.Server({
 			host: config.host,
 			port: config.port,
+			router: {
+				stripTrailingSlash: true
+			},
 			routes: {
 				cors: {
 					origin: allowedOrigins,
@@ -61,7 +64,6 @@ async function initApp(config) {
 		require('./route/health')(app);
 		require('./route/auth')(app);
 		require('./route/tasks')(app);
-		require('./route/task')(app);
 		require('./route/reports')(app);
 
 		// Try to register billing routes if Stripe is configured

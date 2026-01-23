@@ -10,26 +10,43 @@ const nextConfig: NextConfig = {
   },
   async rewrites() {
     return [
+      // Health check
+      {
+        source: '/health',
+        destination: `${BACKEND_URL}/health`,
+      },
+      // Auth routes
+      {
+        source: '/auth',
+        destination: `${BACKEND_URL}/auth`,
+      },
       {
         source: '/auth/:path*',
         destination: `${BACKEND_URL}/auth/:path*`,
+      },
+      // Task routes
+      {
+        source: '/tasks',
+        destination: `${BACKEND_URL}/tasks`,
       },
       {
         source: '/tasks/:path*',
         destination: `${BACKEND_URL}/tasks/:path*`,
       },
+      // Billing routes
+      {
+        source: '/billing',
+        destination: `${BACKEND_URL}/billing`,
+      },
       {
         source: '/billing/:path*',
         destination: `${BACKEND_URL}/billing/:path*`,
-      },
-      {
-        source: '/health',
-        destination: `${BACKEND_URL}/health`,
       },
     ];
   },
 };
 
 export default nextConfig;
+
 
 

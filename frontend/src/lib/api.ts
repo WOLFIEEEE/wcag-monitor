@@ -1,6 +1,5 @@
-// API URL - configured via environment variable for Vercel deployment
-// Falls back to empty string for same-origin (Docker/self-hosted)
-const API_URL = process.env.NEXT_PUBLIC_API_URL || '';
+// API calls go through the Vercel proxy (configured in next.config.ts)
+const API_URL = '';
 
 interface ApiOptions {
   method?: string;

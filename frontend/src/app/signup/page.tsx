@@ -72,7 +72,7 @@ export default function SignupPage() {
     setLoading(true);
     setError(null);
     try {
-      await signup(values.name, values.email, values.password);
+      await signup(values.email, values.password, values.name);
       notifications.show({
         title: 'Account created!',
         message: 'Welcome to WCAG Monitor',

@@ -1,6 +1,7 @@
 'use strict';
 
 const { jwtVerify, SignJWT } = require('jose');
+const Boom = require('@hapi/boom');
 
 /**
  * Create JWT tokens
@@ -41,6 +42,7 @@ async function verifyAccessToken(token, config) {
 		const { payload } = await jwtVerify(token, secret);
 		return payload;
 	} catch (error) {
+		console.error('JWT Verify Error:', error.message);
 		return null;
 	}
 }
@@ -64,54 +66,50 @@ async function verifyRefreshToken(token, config) {
 const authPlugin = {
 	name: 'auth',
 	version: '1.0.0',
-	register: async function(server, options) {
+	register: async function (server, options) {
 		const { config, userModel } = options;
 
 		// Register auth scheme
 		server.auth.scheme('jwt', () => ({
 			authenticate: async (request, h) => {
-				const authorization = request.headers.authorization;
+				try {
+					const authorization = request.headers.authorization;
 
-				if (!authorization) {
-					return h.unauthenticated(
-						new Error('Missing authorization header'),
-						{ credentials: null }
-					);
-				}
-
-				const parts = authorization.split(' ');
-				if (parts.length !== 2 || parts[0] !== 'Bearer') {
-					return h.unauthenticated(
-						new Error('Invalid authorization format'),
-						{ credentials: null }
-					);
-				}
-
-				const token = parts[1];
-				const payload = await verifyAccessToken(token, config);
-
-				if (!payload) {
-					return h.unauthenticated(
-						new Error('Invalid or expired token'),
-						{ credentials: null }
-					);
-				}
-
-				// Get full user from database
-				const user = await userModel.findById(payload.sub);
-				if (!user) {
-					return h.unauthenticated(
-						new Error('User not found'),
-						{ credentials: null }
-					);
-				}
-
-				return h.authenticated({
-					credentials: {
-						user: userModel.prepareForOutput(user),
-						userId: user._id.toString()
+					if (!authorization) {
+						throw Boom.unauthorized('Missing authorization header');
 					}
-				});
+
+					const parts = authorization.split(' ');
+					if (parts.length !== 2 || parts[0] !== 'Bearer') {
+						throw Boom.unauthorized('Invalid authorization format');
+					}
+
+					const token = parts[1];
+					const payload = await verifyAccessToken(token, config);
+
+					if (!payload) {
+						throw Boom.unauthorized('Invalid or expired token');
+					}
+
+					// Get full user from database
+					const user = await userModel.findById(payload.sub);
+					if (!user) {
+						throw Boom.unauthorized('User not found');
+					}
+
+					return h.authenticated({
+						credentials: {
+							user: userModel.prepareForOutput(user),
+							userId: user._id.toString()
+						}
+					});
+				} catch (err) {
+					if (err.isBoom) {
+						throw err;
+					}
+					console.error('Auth Error:', err);
+					throw Boom.internal('Authentication failed');
+				}
 			}
 		}));
 
@@ -144,3 +142,4 @@ module.exports = {
 	authPlugin,
 	optionalAuth
 };
+
